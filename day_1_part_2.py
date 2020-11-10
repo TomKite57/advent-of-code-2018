@@ -31,6 +31,3 @@ if __name__ == "__main__":
         all_freqs = np.append(all_freqs, new_freq)
         current_index += 1
         total_iterations += 1
-
-
-
