@@ -5,6 +5,7 @@ Created on Sun Nov 15 13:32:29 2020
 @author: mbcx4tk5
 """
 
+
 def valid_reac(a, b):
     if a == a.lower():
         if b == a.upper():
@@ -20,17 +21,16 @@ class polymer():
         self.code = code_in
         self.simplified = False
 
-    def react(self):
-        for i in range(len(self.code)-2, -1, -1):
+    def full_react(self):
+        i = len(self.code)-2
+        self.simplified = True
+        while i >= 0:
             if valid_reac(self.code[i], self.code[i+1]):
                 self.code = self.code[:i] + self.code[i+2:]
-                return
-        self.simplified = True
-        return
-
-    def full_react(self):
-        while not self.simplified:
-            self.react()
+                self.simplified = False
+            i -= 1
+        if not self.simplified:
+            self.full_react
         return
 
     def get_length(self):
@@ -57,17 +57,17 @@ if __name__ == "__main__":
     data = open("day_5_data.dat").readline()
     my_pol = polymer(data)
     my_pol.full_react()
-    
+
     all_units = my_pol.get_unit_types()
     unit_length_dict = {}
 
     for unit in all_units:
-         unit_length_dict[unit] = polymer(my_pol.code)
-         unit_length_dict[unit].remove_unit(unit)
-         unit_length_dict[unit].full_react()
-    
+        unit_length_dict[unit] = polymer(my_pol.code)
+        unit_length_dict[unit].remove_unit(unit)
+        unit_length_dict[unit].full_react()
+
     max_unit = min(unit_length_dict.keys(),
-                   key = lambda x: unit_length_dict[x].get_length())
+                   key=lambda x: unit_length_dict[x].get_length())
     print("The shortest length is found by removing {}/{}, with length {}"
           .format(max_unit,
                   max_unit.upper(),
