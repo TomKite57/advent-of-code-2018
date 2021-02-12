@@ -5,8 +5,10 @@ Created on Sat Dec  5 20:57:37 2020
 @author: TKite
 """
 
+from aoc_tools import Advent_Timer
 import numpy as np
 
+GRID_LENGTH = 300
 
 def get_nth_digit(num, N):
     return int(str(num)[-N])
@@ -33,34 +35,47 @@ def coord_score_grid(x, y, size, grid):
     return score
 
 
-if __name__ == "__main__":
-    serial_num = 8772
-    grid_length = 299
+def part1(filename):
+    serial_num = int(open(filename, 'r').readline().strip())
 
     grid = [[get_cell_power(x, y, serial_num)
-             for x in range(1, grid_length+1)]
-            for y in range(1, grid_length+1)]
-    grid = np.array(grid, dtype='int64')
+             for x in range(1, GRID_LENGTH)]
+            for y in range(1, GRID_LENGTH)]
+    grid = np.array(grid, dtype='int')
 
     best_coord = max([(x, y, 3)
-                      for x in range(1, grid_length+1-3)
-                      for y in range(1, grid_length+1-3)],
+                      for x in range(1, GRID_LENGTH-3)
+                      for y in range(1, GRID_LENGTH-3)],
                      key=lambda c:
                          coord_score_grid(c[0]-1, c[1]-1, c[2], grid))
 
-    print("part 1:")
     print("The best coordinate is {}".format(best_coord))
+
+
+def part2(filename):
+    serial_num = int(open(filename, 'r').readline().strip())
+
+    grid = [[get_cell_power(x, y, serial_num)
+             for x in range(1, GRID_LENGTH)]
+            for y in range(1, GRID_LENGTH)]
+    grid = np.array(grid, dtype='int')
 
     best_coord = max([(x, y, s)
-                      for s in range(1, grid_length)
-                      for x in range(1, grid_length+1-s)
-                      for y in range(1, grid_length+1-s)],
+                      for s in range(1, GRID_LENGTH-1)
+                      for x in range(1, GRID_LENGTH-s)
+                      for y in range(1, GRID_LENGTH-s)],
                      key=lambda c:
                          coord_score_grid(c[0]-1, c[1]-1, c[2], grid))
 
-    print("part 2:")
-    print("This will take a minute...")
     print("The best coordinate is {}".format(best_coord))
+
+if __name__ == "__main__":
+    timer = Advent_Timer()
+    part1("data/day_11.dat")
+    timer.checkpoint_hit()
+    part2("data/day_11.dat")
+    timer.checkpoint_hit()
+    timer.end_hit()
 
     """
     part 1:

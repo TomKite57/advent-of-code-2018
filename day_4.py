@@ -5,6 +5,7 @@ Created on Sat Nov 14 16:53:38 2020
 @author: mbcx4tk5
 """
 
+from aoc_tools import Advent_Timer
 import numpy as np
 
 
@@ -98,8 +99,8 @@ def read_data(filename):
     return sorted(output_data, key=lambda x: x[0])
 
 
-if __name__ == "__main__":
-    data = read_data("day_4_data.dat")
+def part1(filename):
+    data = read_data(filename)
     guard_index = {}
 
     current_ID = data[0][1]
@@ -118,7 +119,39 @@ if __name__ == "__main__":
             current_ID = line[1]
 
 
+    max_ID = max(guard_index.keys(), key=lambda x: guard_index[x].total_time())
+    print("Puzzle solution is {}"
+          .format(guard_index[max_ID].best_minute()*max_ID))
+
+
+def part2(filename):
+    data = read_data(filename)
+    guard_index = {}
+
+    current_ID = data[0][1]
+    sleep_time = None
+    wake_time = None
+    counter = 0
+    for line in data:
+        if line[1] == 'sleep':
+            sleep_time = line[0]
+        elif line[1] == 'wake':
+            wake_time = line[0]
+            if current_ID not in guard_index:
+                guard_index[current_ID] = guard(current_ID)
+            guard_index[current_ID].add_time(sleep_time, wake_time)
+        else:
+            current_ID = line[1]
+
     max_ID = max(guard_index.keys(),
                  key=lambda x: guard_index[x].best_frequency())
     print("Puzzle solution is {}"
           .format(guard_index[max_ID].best_minute()*max_ID))
+
+if __name__ == "__main__":
+    timer = Advent_Timer()
+    part1("data/day_4.dat")
+    timer.checkpoint_hit()
+    part2("data/day_4.dat")
+    timer.checkpoint_hit()
+    timer.end_hit()

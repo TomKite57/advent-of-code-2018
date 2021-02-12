@@ -5,6 +5,7 @@ Created on Sat Dec  5 20:57:37 2020
 @author: TKite
 """
 
+from aoc_tools import Advent_Timer
 import numpy as np
 
 
@@ -30,6 +31,18 @@ def take_step(all_coords, mult=1):
     return
 
 
+def full_evolve(all_coords):
+    prev_area = get_grid_area(all_coords)
+    seconds = 0
+    while True:
+        take_step(all_coords)
+        area = get_grid_area(all_coords)
+        seconds += 1
+        if area > prev_area:
+            take_step(all_coords, -1)
+            return seconds - 1
+        prev_area = area
+
 def get_grid_dims(all_coords):
     x_min = min(all_coords[:, 0])
     x_max = max(all_coords[:, 0])
@@ -45,12 +58,9 @@ def get_grid_area(all_coords):
 
 def make_grid(all_coords):
     x_min, x_max, y_min, y_max = get_grid_dims(all_coords)
-
     grid = [['.' for _ in range(x_max-x_min+1)] for _ in range(y_max-y_min+1)]
-
     for row in all_coords:
         grid[row[1]-y_min][row[0]-x_min] = '#'
-
     return grid
 
 
@@ -63,29 +73,24 @@ def show_grid(grid):
     return
 
 
-if __name__ == "__main__":
-    data = readfile("day_10_data.dat")
+def part1(filename):
+    data = readfile(filename)
     data = np.array([process_string(line) for line in data])
+    full_evolve(data)
+    show_grid(make_grid(data))
 
-    seconds = 0
 
-    print(get_grid_area(data))
-    while True:
-        area = get_grid_area(data)
-        take_step(data)
-        seconds += 1
-        if get_grid_area(data) > area:
-            take_step(data, -1)
-            seconds -= 1
-            break
-    print(get_grid_area(data))
-
-    grid = make_grid(data)
-    show_grid(grid)
+def part2(filename):
+    data = readfile(filename)
+    data = np.array([process_string(line) for line in data])
+    seconds = full_evolve(data)
     print("This took {} seconds".format(seconds))
 
-    """
-    print(get_grid_area(stars))
-    # grid = make_grid(stars)
-    # show_grid(grid)
-    """
+
+if __name__ == "__main__":
+    timer = Advent_Timer()
+    part1("data/day_10.dat")
+    timer.checkpoint_hit()
+    part2("data/day_10.dat")
+    timer.checkpoint_hit()
+    timer.end_hit()
