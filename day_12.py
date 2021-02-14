@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Dec  6 20:50:22 2020
+Created on Sat Dec  5 20:57:37 2020
 
 @author: TKite
 """
 
-from copy import deepcopy
-
-
-first_ind = 0
-prev_states = []
-indices = []
-
+from aoc_tools import Advent_Timer
 
 def readfile(filename):
     with open(filename, 'r') as file:
@@ -24,75 +18,83 @@ def readfile(filename):
         rule_dict[r[0]] = r[1]
     return initial_condition, rule_dict
 
+class planter:
+    def __init__(self, init_cond_in, rules_in):
+        self.plants = init_cond_in
+        self.rules = rules_in
+        self.index_start = 0
+        self.iteration = 0
+        self.adapt_planter()
+        self.history = {self.plants: [self.iteration, self.index_start]}
+        self.repeated = False
 
-def plants_to_int(plants):
-    binary = plants.replace('.', '0')
-    binary = binary.replace('#', '1')
-    return int(binary, 2)
+    def adapt_planter(self):
+        # Expand on left
+        while '#' in self.plants[:3]:
+            self.plants = '.' + self.plants
+            self.index_start -= 1
+        # Contract on left
+        while '#' not in self.plants[:4]:
+            self.plants = self.plants[1:]
+            self.index_start += 1
+        # Expand on right
+        while '#' in self.plants[-3:]:
+            self.plants = self.plants + '.'
+        # Contract on right
+        while '#' not in self.plants[-4:]:
+            self.plants = self.plants[:-1]
 
+    def force_manual_evol(self):
+        new_plants = '..'
+        for i in range(2, len(self.plants)-2):
+            new_plants += self.rules[self.plants[i-2:i+3]]
+        new_plants += '..'
+        self.plants = new_plants
+        self.adapt_planter()
+        self.iteration += 1
 
-def adapt_row(plants):
-    global first_ind
-    # Expand on left
-    while '#' in plants[:3]:
-        plants = '.' + plants
-        first_ind -= 1
-    # Contract on left
-    while '#' not in plants[:4]:
-        plants = plants[1:]
-        first_ind += 1
-    # Expand on right
-    while '#' in plants[-3:]:
-        plants = plants + '.'
-    # Contract on right
-    while '#' not in plants[-4:]:
-        plants = plants[:-1]
-    return plants
-
-
-def evolve_plants(plants, rules):
-    new_plants = '..'
-    for i in range(2, len(plants)-2):
-        new_plants += rules[plants[i-2:i+3]]
-    new_plants += '..'
-    new_plants = adapt_row(new_plants)
-    return new_plants
-
-
-def count_after_N_steps(initial_cond, steps):
-    plants = adapt_row(deepcopy(initial_cond))
-    global first_ind, prev_states, indices
-    first_ind = 0
-    prev_states = [plants_to_int(plants)]
-    indices.append(first_ind)
-
-    i = 1
-    while i <= steps:
-        i += 1
-        plants = evolve_plants(plants, rule_dict)
-        state_int = plants_to_int(plants)
-        if state_int in prev_states:
-            ind = prev_states.index(state_int)
-            old_first_ind = indices[ind]
-            first_ind += (first_ind - old_first_ind)*((steps-i)//(i-ind))
-            for _ in range((steps-i) % (i-ind)):
-                plants = evolve_plants(plants, rule_dict)
-            break
+    def check_repeat(self):
+        if self.plants in self.history:
+            self.repeated = True
         else:
-            prev_states.append(state_int)
-            indices.append(first_ind)
+            self.history[self.plants] =  [self.iteration, self.index_start]
 
-    return sum([i+first_ind for i, p in enumerate(plants) if p == '#'])
+    def evolve_to_step_N(self, N):
+        while self.iteration < N:
+            if not self.repeated:
+                self.force_manual_evol()
+                self.check_repeat()
+            else:
+                prev_it, prev_ind = self.history[self.plants]
+                delta_it = self.iteration - prev_it
+                prev_ind = self.index_start - prev_ind
+                loop_num = (N - self.iteration) // delta_it
+                self.iteration += loop_num*delta_it
+                self.index_start += loop_num*prev_ind
+                for _ in range(N-self.iteration):
+                    self.force_manual_evol()
 
+    def outcount(self):
+        return sum([self.index_start + i for i,char in enumerate(self.plants) if char == '#'])
+
+
+def part1(filename):
+    initial_cond, rule_dict = readfile(filename)
+    my_planter = planter(initial_cond, rule_dict)
+    my_planter.evolve_to_step_N(20)
+    print("After {} steps the pot count is {}.".format(20, my_planter.outcount()))
+
+
+def part2(filename):
+    initial_cond, rule_dict = readfile(filename)
+    my_planter = planter(initial_cond, rule_dict)
+    my_planter.evolve_to_step_N(50000000000)
+    print("After {} steps the pot count is {}.".format(50000000000, my_planter.outcount()))
 
 if __name__ == "__main__":
-    initial_cond, rule_dict = readfile("day_12_data.dat")
-    initial_cond = adapt_row(initial_cond)
-
-    #print("Part 1:")
-    #total_sum = count_after_N_steps(initial_cond, 20)
-    #print("Total index sum: {}.".format(total_sum))
-
-    print("Part 2:")
-    total_sum = count_after_N_steps(initial_cond, 50000000000)
-    print("Total index sum: {}.".format(total_sum))
+    timer = Advent_Timer()
+    part1("data/day_12.dat")
+    timer.checkpoint_hit()
+    part2("data/day_12.dat")
+    timer.checkpoint_hit()
+    timer.end_hit()
